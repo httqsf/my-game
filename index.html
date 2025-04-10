@@ -1,0 +1,41 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>15分タイマーゲーム</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- スタート画面 -->
+  <div id="start-screen" class="screen">
+    <h1>スタート画面</h1>
+    <button id="start-button">スタート</button>
+  </div>
+
+  <!-- ゲーム画面 -->
+  <div id="game-screen" class="screen" style="display: none;">
+    <h2>残り時間: <span id="timer">15:00</span></h2>
+    <div id="question-area">
+      <!-- 問題文や画像表示 -->
+      <h3 id="stage-number"></h3>
+      <img id="question-image" src="" alt="" style="max-width: 200px;">
+      <p id="question-text"></p>
+    </div>
+    <div id="answer-area">
+      <input type="text" id="user-answer" placeholder="答えを入力してください">
+      <button id="submit-answer">送信</button>
+    </div>
+  </div>
+
+  <!-- リザルト画面 -->
+  <div id="result-screen" class="screen" style="display: none;">
+    <h2 id="result-message">リザルト</h2>
+    <img id="result-image" src="" alt="" style="max-width: 200px;">
+    <p>受付に戻ってね</p>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+/* style.css */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  text-align: center;
+}
+
+.screen {
+  margin: 20px auto;
+  max-width: 600px;
+}
+
+/* ボタンのざっくりしたスタイル */
+button {
+  padding: 10px 20px;
+  font-size: 1rem;
+}
+
+/* 入力欄のスタイル調整 */
+input[type="text"] {
+  width: 200px;
+  padding: 5px;
+  font-size: 1rem;
+  margin-right: 5px;
+}
