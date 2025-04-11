@@ -1,39 +1,14 @@
 /*************************************************
- *  ゲーム用データ（問題情報など）
- *************************************************/
-const questions = [
-  {
-    stage: 1,
-    text: "'宝石'はなんと読むでしょう？",
-    image: "assets/images/jewel.jpg", // 画像がない場合は "" とする
-    // 複数答えのうち、いずれかに完全一致すれば正解とする
-    answers: ["ほうせき", "宝石", "Jewel"],
-    hint: "「ほう」で始まる言葉です"
-  },
-  {
-    stage: 2,
-    text: "これは何色ですか？",
-    image: "assets/images/color.png",
-    answers: ["あか", "赤", "あかいろ", "赤色"],
-    hint: "血の色と同じです"
-  },
-  {
-    stage: 3,
-    text: "次の文字列を英語でなんと言う？『こんにちは』",
-    image: "",
-    answers: ["hello", "Hello", "HELLO"],
-    hint: "アルファベット5文字で、「h」で始まります"
-  }
-];
-
-/*************************************************
  *  変数・定数
  *************************************************/
 // 現在の問題番号（0 ～ questions.length-1）
 let currentQuestionIndex = 0;
 
+// 現在表示中のヒントのインデックス
+let currentHintIndex = 0;
+
 // タイマー用
-let timeLeft = 65; // 15分（900秒）
+let timeLeft = GAME_CONFIG.TIME_LIMIT; // 15分（900秒）を外部設定から取得
 let timerId = null;
 
 // オーディオオブジェクトを追加
@@ -78,7 +53,13 @@ window.addEventListener("DOMContentLoaded", () => {
   // ヒントリンク押下時の処理
   document.getElementById("hint-link").addEventListener("click", (e) => {
     e.preventDefault(); // デフォルトのリンク動作を防止
+    currentHintIndex = 0; // ヒントインデックスをリセット
     showHintModal();
+  });
+  
+  // 次のヒントボタン押下時の処理
+  document.getElementById("next-hint").addEventListener("click", () => {
+    showNextHint();
   });
   
   // モーダルの閉じるボタン
@@ -143,9 +124,12 @@ function showResultScreen(isClear) {
 function startTimer() {
   // 初期化
   if (timeLeft === undefined || timeLeft === null) {
-    timeLeft = 65; // 15分
+    timeLeft = GAME_CONFIG.TIME_LIMIT; // 外部設定から初期時間を取得
   }
   document.getElementById("timer").textContent = formatTime(timeLeft);
+  
+  // 警告クラスを初期状態で削除
+  document.querySelector("h2").classList.remove("warning");
 
   // 既にタイマーが動いていた場合はクリア
   if (timerId) {
@@ -159,8 +143,18 @@ function startTimer() {
     // 状態を保存
     saveGameState();
 
+    // 残り60秒（1分）になったら警告を表示
+    if (timeLeft === 60) {
+      // 警告音を再生
+      warningSound.play();
+      // タイマーのh2要素に警告クラスを追加
+      document.querySelector("h2").classList.add("warning");
+    }
+
     if (timeLeft <= 0) {
       clearInterval(timerId);
+      // タイムアップ効果音を再生
+      timeupSound.play();
       // タイムアップ → ゲームオーバー画面へ
       showResultScreen(false);
     }
@@ -178,7 +172,7 @@ function formatTime(seconds) {
  *  問題読み込み・答え判定
  *************************************************/
 function loadQuestion(index) {
-  const q = questions[index];
+  const q = GAME_QUESTIONS[index];
   // ステージ番号
   document.getElementById("stage-number").textContent = `ステージ ${q.stage}`;
   // 問題文
@@ -199,7 +193,7 @@ function loadQuestion(index) {
 
   // ヒントリンクの表示制御（ヒントがある場合のみ表示）
   const hintLink = document.getElementById("hint-link");
-  if (q.hint) {
+  if (q.hints && q.hints.length > 0) {
     hintLink.style.display = "inline";
   } else {
     hintLink.style.display = "none";
@@ -208,7 +202,7 @@ function loadQuestion(index) {
 
 function checkAnswer() {
   const userAnswer = document.getElementById("user-answer").value.trim();
-  const correctAnswers = questions[currentQuestionIndex].answers;
+  const correctAnswers = GAME_QUESTIONS[currentQuestionIndex].answers;
 
   const isCorrect = correctAnswers.includes(userAnswer);
 
@@ -219,7 +213,7 @@ function checkAnswer() {
     // 正解 → 次の問題へ
     currentQuestionIndex++;
     // 全問正解したか確認
-    if (currentQuestionIndex >= questions.length) {
+    if (currentQuestionIndex >= GAME_QUESTIONS.length) {
       // 全問正解 → ゲームクリア
       clearInterval(timerId); // タイマー停止
       showResultScreen(true);
@@ -234,12 +228,22 @@ function checkAnswer() {
     incorrectSound.play();
     
     // ペナルティ処理
-    const penalty = 30;
+    const penalty = GAME_CONFIG.PENALTY_TIME;
     timeLeft = Math.max(0, timeLeft - penalty);
     document.getElementById("timer").textContent = formatTime(timeLeft);
     
+    // 残り時間が60秒以下になったら警告表示
+    if (timeLeft <= 60 && timeLeft > 0) {
+      // 警告音を再生（1回だけ）
+      warningSound.play();
+      // タイマーのh2要素に警告クラスを追加
+      document.querySelector("h2").classList.add("warning");
+    }
+    
     if (timeLeft <= 0) {
       clearInterval(timerId);
+      // タイムアップ効果音を再生
+      timeupSound.play();
       showResultScreen(false);
       saveGameState(); // 状態を保存
       return;
@@ -300,11 +304,11 @@ function resetGame() {
   
   // 状態をリセット
   currentQuestionIndex = 0;
-  timeLeft = 900;
+  timeLeft = GAME_CONFIG.TIME_LIMIT;
   
   // タイマー表示をリセット
   document.getElementById("timer").textContent = formatTime(timeLeft);
-  document.getElementById("timer").classList.remove("warning");
+  document.querySelector("h2").classList.remove("warning");
   document.getElementById("timer").style.visibility = "visible";
   
   // 入力欄をクリア
@@ -316,18 +320,67 @@ function resetGame() {
 
 // ヒントモーダルを表示する関数
 function showHintModal() {
-  const currentQuestion = questions[currentQuestionIndex];
+  const currentQuestion = GAME_QUESTIONS[currentQuestionIndex];
   
-  if (currentQuestion.hint) {
+  if (currentQuestion.hints && currentQuestion.hints.length > 0) {
     // ヒントをモーダルに設定
-    document.getElementById("hint-text").textContent = currentQuestion.hint;
+    document.getElementById("hint-text").textContent = currentQuestion.hints[currentHintIndex];
+    
+    // ヒント番号を表示
+    updateHintCounter();
+    
+    // 次へボタンの表示制御
+    updateNextButtonVisibility();
     
     // モーダルを表示
     document.getElementById("hint-modal").style.display = "block";
   } else {
     // ヒントがない場合のメッセージ
     document.getElementById("hint-text").textContent = "このステージにはヒントがありません。";
+    document.getElementById("hint-number").style.display = "none";
+    document.getElementById("next-hint").style.display = "none";
     document.getElementById("hint-modal").style.display = "block";
+  }
+}
+
+// 次のヒントを表示する関数
+function showNextHint() {
+  const currentQuestion = GAME_QUESTIONS[currentQuestionIndex];
+  
+  if (currentQuestion.hints && currentHintIndex < currentQuestion.hints.length - 1) {
+    currentHintIndex++;
+    document.getElementById("hint-text").textContent = currentQuestion.hints[currentHintIndex];
+    
+    // ヒント番号を更新
+    updateHintCounter();
+    
+    // 次へボタンの表示制御
+    updateNextButtonVisibility();
+  }
+}
+
+// ヒントカウンターを更新する関数
+function updateHintCounter() {
+  const currentQuestion = GAME_QUESTIONS[currentQuestionIndex];
+  const hintCounter = document.getElementById("hint-number");
+  
+  if (currentQuestion.hints && currentQuestion.hints.length > 0) {
+    hintCounter.textContent = `ヒント ${currentHintIndex + 1}/${currentQuestion.hints.length}`;
+    hintCounter.style.display = "block";
+  } else {
+    hintCounter.style.display = "none";
+  }
+}
+
+// 次へボタンの表示/非表示を切り替える関数
+function updateNextButtonVisibility() {
+  const currentQuestion = GAME_QUESTIONS[currentQuestionIndex];
+  const nextButton = document.getElementById("next-hint");
+  
+  if (currentQuestion.hints && currentHintIndex < currentQuestion.hints.length - 1) {
+    nextButton.style.display = "block";
+  } else {
+    nextButton.style.display = "none";
   }
 }
 
