@@ -4,6 +4,9 @@
 <head>
   <meta charset="UTF-8">
   <title>15分タイマーゲーム</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -22,6 +25,7 @@
       <h3 id="stage-number"></h3>
       <img id="question-image" src="" alt="" style="max-width: 200px;">
       <p id="question-text"></p>
+      <p><a href="#" id="hint-link">ヒントを見る</a></p>
     </div>
     <div id="answer-area">
       <input type="text" id="user-answer" placeholder="答えを入力してください">
@@ -34,8 +38,27 @@
     <h2 id="result-message">リザルト</h2>
     <img id="result-image" src="" alt="" style="max-width: 200px;">
     <p>受付に戻ってね</p>
+    <button id="reset-button">もう一度遊ぶ</button>
+  </div>
+
+  <!-- モーダルダイアログ -->
+  <div id="hint-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>ヒント</h3>
+        <span class="close-button">&times;</span>
+      </div>
+      <div class="modal-body">
+        <p id="hint-text"></p>
+      </div>
+      <div class="modal-footer">
+        <button id="close-hint">閉じる</button>
+      </div>
+    </div>
   </div>
 
   <script src="script.js"></script>
 </body>
 </html>
+
+
