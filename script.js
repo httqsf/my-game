@@ -143,7 +143,7 @@ function showResultScreen(isClear) {
 function startTimer() {
   // 初期化
   if (timeLeft === undefined || timeLeft === null) {
-    timeLeft = 900; // 15分
+    timeLeft = 65; // 15分
   }
   document.getElementById("timer").textContent = formatTime(timeLeft);
 
